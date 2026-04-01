@@ -1,18 +1,33 @@
 import axios from 'axios';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api',
-  withCredentials: true,
+  baseURL: API_URL,
+  withCredentials: false,
+});
+
+// Add token to every request
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
 });
 
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
     if (error.response?.status === 401) {
-      if (typeof window !== 'undefined' &&
-          !window.location.pathname.includes('/login') &&
-          !window.location.pathname.includes('/register')) {
-        window.location.href = '/login';
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+        if (!window.location.pathname.includes('/login') &&
+            !window.location.pathname.includes('/register')) {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);
@@ -24,7 +39,12 @@ export const authApi = {
     api.post('/auth/register', data),
   login: (data: { email: string; password: string }) =>
     api.post('/auth/login', data),
-  logout: () => api.post('/auth/logout'),
+  logout: () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('accessToken');
+    }
+    return api.post('/auth/logout');
+  },
   me: () => api.get('/auth/me'),
 };
 

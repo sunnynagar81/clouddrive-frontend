@@ -32,9 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasFetched = useRef(false);
 
   useEffect(() => {
-    // Only fetch once
     if (hasFetched.current) return;
     hasFetched.current = true;
+
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
     authApi
       .me()
@@ -43,10 +48,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(res.data.user);
         } else {
           setUser(null);
+          localStorage.removeItem('accessToken');
         }
       })
       .catch(() => {
         setUser(null);
+        localStorage.removeItem('accessToken');
       })
       .finally(() => {
         setLoading(false);
@@ -55,11 +62,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const res = await authApi.login({ email, password });
+    const token = res.data.accessToken;
+    if (token) {
+      localStorage.setItem('accessToken', token);
+    }
     setUser(res.data.user);
   };
 
   const register = async (name: string, email: string, password: string) => {
     const res = await authApi.register({ name, email, password });
+    const token = res.data.accessToken;
+    if (token) {
+      localStorage.setItem('accessToken', token);
+    }
     setUser(res.data.user);
   };
 
@@ -67,8 +82,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authApi.logout();
     } catch {
-      // ignore logout errors
+      // ignore
     }
+    localStorage.removeItem('accessToken');
     setUser(null);
     window.location.replace('/login');
   };
