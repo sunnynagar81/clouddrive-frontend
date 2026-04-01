@@ -32,9 +32,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     authApi
       .me()
-      .then((res) => setUser(res.data.user))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+      .then((res) => {
+        if (res.data?.user) {
+          setUser(res.data.user);
+        } else {
+          setUser(null);
+        }
+      })
+      .catch(() => {
+        setUser(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -48,7 +58,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await authApi.logout();
+    try {
+      await authApi.logout();
+    } catch {
+      // ignore
+    }
     setUser(null);
     window.location.href = '/login';
   };

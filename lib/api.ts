@@ -8,18 +8,11 @@ const api = axios.create({
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
-    const original = error.config;
-    if (error.response?.status === 401 && !original._retry) {
-      original._retry = true;
-      try {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
-          {},
-          { withCredentials: true }
-        );
-        return api(original);
-      } catch {
-        if (typeof window !== 'undefined') window.location.href = '/login';
+    if (error.response?.status === 401) {
+      if (typeof window !== 'undefined' &&
+          !window.location.pathname.includes('/login') &&
+          !window.location.pathname.includes('/register')) {
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);

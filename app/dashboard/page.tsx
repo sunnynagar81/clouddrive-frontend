@@ -31,8 +31,8 @@ export default function DashboardPage() {
   );
 
   useEffect(() => {
-    if (!authLoading && !user) router.push('/login');
-  }, [authLoading, user, router]);
+  if (!authLoading && !user) router.push('/login');
+}, [authLoading, user, router]);
 
   const { data: folderData, isLoading, refetch } = useQuery({
     queryKey: ['folder', folderId],
