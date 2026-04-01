@@ -14,7 +14,6 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // If already logged in redirect to dashboard
   useEffect(() => {
     if (!loading && user) {
       router.replace('/dashboard');
@@ -33,9 +32,15 @@ export default function RegisterPage() {
       await register(name, email, password);
       router.replace('/dashboard');
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: { message?: string } } } };
-const message = error.response?.data?.error?.message || 'Registration failed. Please try again.';
-      setError(message);
+      const e = err as {
+        response?: { data?: { error?: { message?: string } } };
+        message?: string;
+      };
+      setError(
+        e.response?.data?.error?.message ||
+        e.message ||
+        'Registration failed. Please try again.'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -44,7 +49,13 @@ const message = error.response?.data?.error?.message || 'Registration failed. Pl
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-blue-900">
-        <Loader2 className="w-8 h-8 animate-spin text-white" />
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-white mx-auto mb-4" />
+          <p className="text-white text-sm">Connecting to server...</p>
+          <p className="text-blue-300 text-xs mt-1">
+            First load may take 30-60 seconds
+          </p>
+        </div>
       </div>
     );
   }
@@ -126,10 +137,7 @@ const message = error.response?.data?.error?.message || 'Registration failed. Pl
         </form>
         <p className="text-center text-slate-500 text-sm mt-8">
           Already have an account?{' '}
-          <Link
-            href="/login"
-            className="text-blue-600 font-semibold hover:underline"
-          >
+          <Link href="/login" className="text-blue-600 font-semibold hover:underline">
             Sign in
           </Link>
         </p>

@@ -13,7 +13,6 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // If already logged in, redirect to dashboard
   useEffect(() => {
     if (!loading && user) {
       router.replace('/dashboard');
@@ -28,24 +27,34 @@ export default function LoginPage() {
       await login(email, password);
       router.replace('/dashboard');
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'Login failed.';
-      setError(message);
+      const e = err as {
+        response?: { data?: { error?: { message?: string } } };
+        message?: string;
+      };
+      setError(
+        e.response?.data?.error?.message ||
+        e.message ||
+        'Login failed. Please try again.'
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Show loading while checking auth
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-blue-900">
-        <Loader2 className="w-8 h-8 animate-spin text-white" />
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-white mx-auto mb-4" />
+          <p className="text-white text-sm">Connecting to server...</p>
+          <p className="text-blue-300 text-xs mt-1">
+            First load may take 30-60 seconds
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Don't show login form if already logged in
   if (user) return null;
 
   return (
@@ -108,10 +117,7 @@ export default function LoginPage() {
         </form>
         <p className="text-center text-slate-500 text-sm mt-8">
           Don&apos;t have an account?{' '}
-          <Link
-            href="/register"
-            className="text-blue-600 font-semibold hover:underline"
-          >
+          <Link href="/register" className="text-blue-600 font-semibold hover:underline">
             Create one
           </Link>
         </p>

@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useRef,
   ReactNode,
 } from 'react';
 import { authApi } from '@/lib/api';
@@ -28,8 +29,13 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
+    // Only fetch once
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
     authApi
       .me()
       .then((res) => {
@@ -61,10 +67,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authApi.logout();
     } catch {
-      // ignore
+      // ignore logout errors
     }
     setUser(null);
-    window.location.href = '/login';
+    window.location.replace('/login');
   };
 
   return (
